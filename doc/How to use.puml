@@ -1,0 +1,32 @@
+@startuml
+
+note top of design: Read only package
+namespace design #DDDDDD {
+    class TpmTree<Content> {
+        -List<Item<Content>> children;
+        -Builder<Content> builder;
+    }
+
+    class TpmTreeItem<Content> {
+        +List<TpmTreeItem<Content>> children;
+        +Content content;
+    }
+
+    abstract class TpmTreeItemWidgetBuilderBase<Content> {
+        {abstract} ~Widget buildLeadColumn();
+        {abstract} ~List<Widget> buildDataColumns();
+        {abstract} ~List<Widget> buildDataHeaders();
+    }
+}
+
+note left of applicationdesign: Design of the application
+namespace applicationdesign {
+    class Content
+    class TpmTreeBuilder<Content> extends design.TpmTreeItemWidgetBuilderBase {
+        ~Widget buildLeadColumn();
+        ~List<Widget> buildDataColumns();
+        ~List<Widget> buildDataHeaders();
+    }
+}
+
+@enduml
