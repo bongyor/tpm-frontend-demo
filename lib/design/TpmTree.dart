@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class TreeItem<Content> {
   final List<TreeItem<Content>> children;
   final Content content;
+  final RxBool opened = true.obs;
 
   TreeItem(this.content, {this.children = const []});
 }
@@ -18,35 +20,38 @@ abstract class TpmTreeItemWidgetBuilderBase<Content> {
 class TpmTreeRenderItem<Content> {
   final List<TpmTreeParent> szulok;
   final Content content;
+  final RxBool opened;
 
-  TpmTreeRenderItem(this.szulok, this.content);
+  // final TpmTreeRenderItemOpenIconState state;
+
+  TpmTreeRenderItem(this.szulok, this.content, this.opened);
 }
 
+enum TpmTreeRenderItemOpenIconState { OPEN, CLOSED, EMPTY }
+
 class TpmTree<Content> extends StatelessWidget {
-  final List<TreeItem<Content>> children;
+  final RxList<TreeItem<Content>> children;
   final TpmTreeItemWidgetBuilderBase<Content> builder;
   final double spaceing;
   final double rowHeight;
 
-  TpmTree(this.builder, this.children, {this.spaceing = 20, this.rowHeight = 25});
+  TpmTree(this.builder, this.children,
+      {this.spaceing = 24, this.rowHeight = 25});
 
   Widget build(BuildContext context) {
-    final List<TpmTreeRenderItem<Content>> flatChildren =
-        flatTreeRenderItems(children);
-
-    return Column(
-      children: <Widget>[
-            Row(
-              children: <Widget>[
-                    Container(
-                      width: 200,
-                    )
-                  ] +
-                  expandColumns(builder.buildDataHeaders()),
-            )
-          ] +
-          buildTreeItems(flatChildren),
-    );
+    return Obx(() => Column(
+          children: <Widget>[
+                Row(
+                  children: <Widget>[
+                        Container(
+                          width: 200,
+                        )
+                      ] +
+                      expandColumns(builder.buildDataHeaders()),
+                )
+              ] +
+              buildTreeItems(flatTreeRenderItems(children)),
+        ));
   }
 
   List<Widget> buildTreeItems(List<TpmTreeRenderItem> flatChildren) {
@@ -60,17 +65,41 @@ class TpmTree<Content> extends StatelessWidget {
                       child: Row(
                         children: [
                           Container(
-                              // color: Colors.lightGreen,
-                              width: renderItem.szulok.length * spaceing,
-                              height: rowHeight,
-                              child: CustomPaint(
-                                painter:
-                                    TpmTreePrefixPainter(renderItem.szulok),
-                                child: Container(),
-                              )),
+                            // color: Colors.lightGreen,
+                            width: renderItem.szulok.length * spaceing,
+                            height: rowHeight,
+                            child: CustomPaint(
+                              painter: TpmTreePrefixPainter(
+                                  renderItem.szulok, spaceing),
+                              child: Container(),
+                            ),
+                          ),
+                          Container(
+                            color: Colors.blue,
+                            alignment: Alignment.topLeft,
+                            width: spaceing,
+                            height: rowHeight,
+                            child: IconButton(
+                              alignment: Alignment.topLeft,
+                              padding: EdgeInsets.zero,
+                              // iconSize: 20,
+                              icon: Obx(
+                                () => Icon(
+                                  renderItem.opened.value
+                                      ? Icons.arrow_drop_down
+                                      : Icons.arrow_right,
+                                ),
+                              ),
+                              onPressed: () {
+                                renderItem.opened.toggle();
+                                children.refresh();
+                              },
+                            ),
+                          ),
                           SizedBox(
                             child: builder.buildLeadColumn(renderItem.content),
-                            width: 200 - renderItem.szulok.length * spaceing,
+                            width:
+                                200 - (renderItem.szulok.length + 1) * spaceing,
                             height: rowHeight,
                           ),
                         ],
@@ -98,21 +127,26 @@ class TpmTree<Content> extends StatelessWidget {
   List<TpmTreeRenderItem<Content>> flatTreeRenderItem(TreeItem<Content> item,
       {List<TpmTreeParent> szulok = const []}) {
     final flatten = <TpmTreeRenderItem<Content>>[];
-    flatten.add(TpmTreeRenderItem(szulok, item.content));
-    for (var childIndex = 0; childIndex < item.children.length; childIndex++) {
-      final child = item.children[childIndex];
-      final legalso = (childIndex == item.children.length - 1);
-      final orokoltSzulok = szulok.map((e) {
-            if (e == TpmTreeParent.NYITOTT) {
-              return TpmTreeParent.ZART;
-            } else if (e == TpmTreeParent.NYITOTT_LEGALSO) {
-              return TpmTreeParent.URES;
-            } else {
-              return e;
-            }
-          }).toList() +
-          [legalso ? TpmTreeParent.NYITOTT_LEGALSO : TpmTreeParent.NYITOTT];
-      flatten.addAll(flatTreeRenderItem(child, szulok: orokoltSzulok));
+    flatten.add(TpmTreeRenderItem(szulok, item.content, item.opened));
+
+    if (item.opened.value) {
+      for (var childIndex = 0;
+          childIndex < item.children.length;
+          childIndex++) {
+        final child = item.children[childIndex];
+        final legalso = (childIndex == item.children.length - 1);
+        final orokoltSzulok = szulok.map((e) {
+              if (e == TpmTreeParent.NYITOTT) {
+                return TpmTreeParent.ZART;
+              } else if (e == TpmTreeParent.NYITOTT_LEGALSO) {
+                return TpmTreeParent.URES;
+              } else {
+                return e;
+              }
+            }).toList() +
+            [legalso ? TpmTreeParent.NYITOTT_LEGALSO : TpmTreeParent.NYITOTT];
+        flatten.addAll(flatTreeRenderItem(child, szulok: orokoltSzulok));
+      }
     }
 
     return flatten;
@@ -122,10 +156,10 @@ class TpmTree<Content> extends StatelessWidget {
 enum TpmTreeParent { ZART, NYITOTT_LEGALSO, URES, NYITOTT }
 
 class TpmTreePrefixPainter extends CustomPainter {
-  final int egySzuloSzelessege = 20;
+  final double egySzuloSzelessege;
   final List<TpmTreeParent> szulok;
 
-  TpmTreePrefixPainter(this.szulok);
+  TpmTreePrefixPainter(this.szulok, this.egySzuloSzelessege);
 
   @override
   void paint(Canvas canvas, Size size) {

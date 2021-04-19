@@ -62,11 +62,6 @@ class DemoBuilder extends TpmTreeItemWidgetBuilderBase<DemoContent> {
         child: Row(
           children: [
             Icon(
-              Icons.circle,
-              size: 6,
-            ),
-            Container(width: 5),
-            Icon(
               Icons.folder,
               size: 15,
               color: Colors.blueGrey,
@@ -106,7 +101,7 @@ class TPMDemo extends StatelessWidget {
 }
 
 class MyHomePage extends StatelessWidget {
-  final List<TreeItem<DemoContent>> content = [
+  final RxList<TreeItem<DemoContent>> content = [
     TreeItem(DemoContent(elso: 1)),
     TreeItem(DemoContent(elso: 2), children: [
       TreeItem(DemoContent(elso: 3)),
@@ -133,7 +128,7 @@ class MyHomePage extends StatelessWidget {
       TreeItem(DemoContent(elso: 17)),
     ]),
     TreeItem(DemoContent(elso: 18)),
-  ];
+  ].obs;
 
   Widget build(BuildContext context) {
     return Scaffold(
