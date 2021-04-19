@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tpm/design/TpmTree.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 
 class TestContent {
   final String title;
@@ -32,11 +33,10 @@ void main() {
     await tester.pumpWidget(Directionality(
       child: MediaQuery(
         data: MediaQueryData(),
-        child: TpmTree(TestBuilder(), []),
+        child: TpmTree(TestBuilder(), <TreeItem<TestContent>>[].obs),
       ),
       textDirection: TextDirection.ltr,
     ));
-    expect(find.byType(TpmTree), findsOneWidget);
     expect(find.text('Első'), findsOneWidget);
   });
 }

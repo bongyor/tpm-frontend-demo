@@ -101,7 +101,7 @@ class TPMDemo extends StatelessWidget {
 }
 
 class MyHomePage extends StatelessWidget {
-  final RxList<TreeItem<DemoContent>> content = [
+  final List<TreeItem<DemoContent>> content = [
     TreeItem(DemoContent(elso: 1)),
     TreeItem(DemoContent(elso: 2), children: [
       TreeItem(DemoContent(elso: 3)),
@@ -128,16 +128,26 @@ class MyHomePage extends StatelessWidget {
       TreeItem(DemoContent(elso: 17)),
     ]),
     TreeItem(DemoContent(elso: 18)),
-  ].obs;
+  ];
 
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("TPM demó"),
       ),
-      body: TpmTree(
-        DemoBuilder(),
-        content,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            TpmTree(
+              DemoBuilder(),
+              content,
+            ),
+            TpmTree(
+              DemoBuilder(),
+              content,
+            ),
+          ],
+        ),
       ),
     );
   }
