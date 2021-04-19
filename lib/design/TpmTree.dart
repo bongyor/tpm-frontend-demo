@@ -131,8 +131,7 @@ class TpmTreePrefixPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     var paint = Paint()
       ..color = Colors.black
-      ..strokeWidth = 1
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = 1;
 
     double startPoint = 5;
     for (var szulo in szulok) {
